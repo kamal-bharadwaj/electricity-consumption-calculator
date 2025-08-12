@@ -1,0 +1,316 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+<meta charset="UTF-8" />
+<meta name="viewport" content="width=device-width, initial-scale=1.0" />
+<title>Electricity Usage Calculator</title>
+<style>
+    /* ==== THEME COLORS ==== */
+    :root {
+        --bg-color: #f3f5fa;
+        --text-color: #1e1e2f;
+        --card-bg: rgba(255, 255, 255, 0.9);
+        --accent-gradient: linear-gradient(135deg, #6a11cb, #2575fc);
+        --danger-gradient: linear-gradient(135deg, #ff416c, #ff4b2b);
+        --info-gradient: linear-gradient(135deg, #00bfa6, #1de9b6);
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.08);
+        --input-bg: rgba(255, 255, 255, 0.8);
+    }
+    body.dark {
+        --bg-color: #10131a;
+        --text-color: #f4f4f4;
+        --card-bg: rgba(25, 28, 34, 0.9);
+        --shadow: 0 8px 30px rgba(0, 0, 0, 0.5);
+        --input-bg: rgba(40, 44, 52, 0.6);
+    }
+
+    /* ==== BASE STYLES ==== */
+    * { box-sizing: border-box; }
+    body {
+        font-family: 'Segoe UI', Arial, sans-serif;
+        background: var(--bg-color);
+        color: var(--text-color);
+        margin: 0;
+        transition: background 0.4s, color 0.4s;
+    }
+    header {
+        background: var(--accent-gradient);
+        padding: 1rem 2rem;
+        display: flex;
+        justify-content: space-between;
+        align-items: center;
+        color: white;
+        font-size: 1.5rem;
+        font-weight: 600;
+        box-shadow: var(--shadow);
+        position: sticky;
+        top: 0;
+        z-index: 10;
+    }
+    header button {
+        background: rgba(255,255,255,0.2);
+        border: none;
+        padding: 0.6rem 0.9rem;
+        border-radius: 50%;
+        cursor: pointer;
+        color: white;
+        font-size: 1.2rem;
+        transition: background 0.2s, transform 0.2s;
+    }
+    header button:hover {
+        background: rgba(255,255,255,0.35);
+        transform: scale(1.05);
+    }
+
+    main {
+        max-width: 1000px;
+        margin: auto;
+        padding: 2rem 1rem;
+    }
+
+    /* ==== BUTTONS ==== */
+    .btn {
+        padding: 0.7rem 1.3rem;
+        border: none;
+        border-radius: 8px;
+        cursor: pointer;
+        font-weight: 600;
+        transition: all 0.3s ease;
+        color: white;
+    }
+    .btn-add {
+        background: var(--accent-gradient);
+        box-shadow: var(--shadow);
+    }
+    .btn-add:hover { filter: brightness(1.1); }
+    .btn-remove {
+        background: var(--danger-gradient);
+    }
+    .btn-remove:hover { filter: brightness(1.1); }
+
+    /* ==== DEVICE CARD ==== */
+    .device {
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        box-shadow: var(--shadow);
+        border-radius: 16px;
+        padding: 1rem;
+        margin-bottom: 1.2rem;
+        display: grid;
+        grid-template-columns: repeat(auto-fit, minmax(150px, 1fr)) auto;
+        gap: 1rem;
+        align-items: end;
+        animation: fadeIn 0.3s ease;
+    }
+
+    /* ==== INPUT FIELDS ==== */
+    .input-group {
+        position: relative;
+        display: flex;
+        flex-direction: column;
+    }
+    .input-group label {
+        font-size: 0.85rem;
+        margin-bottom: 0.3rem;
+        opacity: 0.8;
+    }
+    .input-group input {
+        padding: 0.6rem 2.2rem 0.6rem 0.6rem;
+        border: none;
+        border-radius: 8px;
+        background: var(--input-bg);
+        color: var(--text-color);
+        font-size: 0.9rem;
+        box-shadow: inset 0 1px 3px rgba(0,0,0,0.1);
+        transition: background 0.2s;
+    }
+    .input-group input:focus {
+        outline: 2px solid #6a11cb;
+        background: white;
+    }
+
+    /* ==== INFO BUTTON INSIDE INPUT ==== */
+    .info-btn {
+        background: var(--info-gradient);
+        color: white;
+        width: 20px;
+        height: 20px;
+        font-size: 0.7rem;
+        border-radius: 50%;
+        border: none;
+        cursor: pointer;
+        position: absolute;
+        right: 6px;
+        top: 50%;
+        transform: translateY(-50%);
+        display: flex;
+        align-items: center;
+        justify-content: center;
+    }
+    .tooltip {
+        display: none;
+        position: absolute;
+        background: #000;
+        color: white;
+        padding: 0.4rem 0.6rem;
+        border-radius: 4px;
+        font-size: 0.75rem;
+        top: -35px;
+        right: 0;
+        max-width: 200px;
+        z-index: 10;
+        white-space: normal;
+    }
+    .info-btn:hover .tooltip { display: block; }
+
+    /* ==== RESULTS ==== */
+    .results {
+        background: var(--card-bg);
+        backdrop-filter: blur(15px);
+        box-shadow: var(--shadow);
+        border-radius: 16px;
+        padding: 1.5rem;
+        margin-top: 1.5rem;
+    }
+    .results h3 { margin-top: 0; }
+
+    /* ==== ANIMATIONS ==== */
+    @keyframes fadeIn {
+        from {opacity: 0; transform: translateY(6px);}
+        to {opacity: 1; transform: translateY(0);}
+    }
+</style>
+</head>
+<body>
+
+<header>
+    ⚡ Electricity Usage Calculator
+    <button onclick="toggleTheme()" id="themeBtn">🌙</button>
+</header>
+
+<main>
+    <button class="btn btn-add" onclick="addDevice()">+ Add Device</button>
+    <div id="devices-container"></div>
+
+    <div class="results">
+        <h3>Totals</h3>
+        <p id="total-usage">Usage: 0 kWh/day</p>
+        <p id="total-price">Price: ₹0/day</p>
+        <p id="monthly-price">Price: ₹0/month</p>
+        <p id="yearly-price">Price: ₹0/year</p>
+    </div>
+</main>
+
+<script>
+let deviceCounter = 0;
+
+function createInfoButton(text) {
+    const btn = document.createElement("button");
+    btn.className = "info-btn";
+    btn.textContent = "i";
+    const tooltip = document.createElement("div");
+    tooltip.className = "tooltip";
+    tooltip.textContent = text;
+    btn.appendChild(tooltip);
+    return btn;
+}
+
+function addDevice(data = {}) {
+    deviceCounter++;
+    const container = document.getElementById("devices-container");
+    const deviceDiv = document.createElement("div");
+    deviceDiv.className = "device";
+    deviceDiv.dataset.id = deviceCounter;
+
+    const fields = [
+        { label: "Device Name", placeholder: "e.g., Heater", val: data.name || "", info: "Name of the device" },
+        { label: "Power (W)", placeholder: "Watts", val: data.power || "", info: "Rated power in watts", type: "number" },
+        { label: "Hours/day", placeholder: "Hours", val: data.hours || "", info: "Hours used per day", type: "number" },
+        { label: "₹/unit", placeholder: "Price", val: data.rate || "", info: "Electricity rate in ₹/unit", type: "number" }
+    ];
+
+    fields.forEach(f => {
+        const group = document.createElement("div");
+        group.className = "input-group";
+        const label = document.createElement("label");
+        label.textContent = f.label;
+        const input = document.createElement("input");
+        input.placeholder = f.placeholder;
+        input.value = f.val;
+        if (f.type) input.type = f.type;
+        input.oninput = calculateTotal;
+        group.appendChild(label);
+        group.appendChild(input);
+        group.appendChild(createInfoButton(f.info));
+        deviceDiv.appendChild(group);
+    });
+
+    const removeBtn = document.createElement("button");
+    removeBtn.className = "btn btn-remove";
+    removeBtn.textContent = "Remove";
+    removeBtn.onclick = () => {
+        container.removeChild(deviceDiv);
+        saveDevices();
+        calculateTotal();
+    };
+    deviceDiv.appendChild(removeBtn);
+
+    container.appendChild(deviceDiv);
+}
+
+function calculateTotal() {
+    let totalUsage = 0, totalPrice = 0;
+    const devices = document.querySelectorAll(".device");
+    const deviceData = [];
+
+    devices.forEach(device => {
+        const inputs = device.querySelectorAll("input");
+        const name = inputs[0].value;
+        const power = parseFloat(inputs[1].value) || 0;
+        const hours = parseFloat(inputs[2].value) || 0;
+        const rate = parseFloat(inputs[3].value) || 0;
+        const usage = (power * hours) / 1000;
+        totalUsage += usage;
+        totalPrice += usage * rate;
+        deviceData.push({ name, power, hours, rate });
+    });
+
+    document.getElementById("total-usage").textContent = `Usage: ${totalUsage.toFixed(2)} kWh/day`;
+    document.getElementById("total-price").textContent = `Price: ₹${totalPrice.toFixed(2)}/day`;
+    document.getElementById("monthly-price").textContent = `Price: ₹${(totalPrice*30).toFixed(2)}/month`;
+    document.getElementById("yearly-price").textContent = `Price: ₹${(totalPrice*365).toFixed(2)}/year`;
+
+    localStorage.setItem("devices", JSON.stringify(deviceData));
+}
+
+function saveDevices() { calculateTotal(); }
+
+function loadDevices() {
+    const saved = localStorage.getItem("devices");
+    if (saved) {
+        JSON.parse(saved).forEach(d => addDevice(d));
+        calculateTotal();
+    }
+}
+
+function toggleTheme() {
+    document.body.classList.toggle("dark");
+    const darkMode = document.body.classList.contains("dark");
+    document.getElementById("themeBtn").textContent = darkMode ? "☀️" : "🌙";
+    localStorage.setItem("theme", darkMode ? "dark" : "light");
+}
+
+function loadTheme() {
+    const savedTheme = localStorage.getItem("theme");
+    if (savedTheme === "dark") {
+        document.body.classList.add("dark");
+        document.getElementById("themeBtn").textContent = "☀️";
+    }
+}
+
+loadTheme();
+loadDevices();
+</script>
+
+</body>
+</html>
